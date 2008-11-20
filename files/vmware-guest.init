@@ -1,91 +1,111 @@
-#!/bin/bash
-#
-# Init file for open-vm-tools vmware-guestd daemon
-#
-# chkconfig: 345 80 20
-# description: open-vm-tools guest daemon
-#
-# processname: vmware-guestd
-# pidfile: /var/run/vmware-guestd.pid
+#!/bin/sh
 
-# source function library
-. /etc/rc.d/init.d/functions
+### BEGIN INIT INFO
+# Provides:		open-vm-tools
+# Required-Start:	$local_fs
+# Required-Stop:	$local_fs
+# X-Start-Before:	$network
+# X-Stop-After:		$network
+# Default-Start:	S
+# Default-Stop:		0 6
+# Description:		Runs the open-vm-tools services
+# Short-Description:	Runs the open-vm-tools services
+### END INIT INFO
 
-RETVAL=0
-prog="vmware-guestd"
+. /lib/lsb/init-functions
 
-GUESTD=/usr/sbin/vmware-guestd
-PID_FILE=/var/run/vmware-guestd.pid
-LOCK_FILE=/var/lock/subsys/vmware-guestd
-OPTIONS="--background $PID_FILE"
-DND_DIR="/tmp/VMwareDnD"
-
-setup_modules()
+vmxnet_needed ()
 {
-	modprobe vmsync
-	modprobe vmci
-	modprobe vsock
-	[ ! -d "$DND_DIR" ] && mkdir -m 1777 $DND_DIR
-	modprobe vmmemctl
-	modprobe vmhgfs
-	modprobe vmblock
-	sleep 1
-	mount -t vmblock none /proc/fs/vmblock/mountPoint
-}
+	HWVERSION="$(vmware-checkvm -h | head -1 | cut -f5 -d\ )"
 
-unmount_stuff()
-{
-	umount /proc/fs/vmblock/mountPoint
-	sleep 1
-	rmmod vmblock
-}
-
-start()
-{
-	echo -n $"Starting $prog: "
-	setup_modules
-	$GUESTD $OPTIONS && success || failure
-	RETVAL=$?
-	[ "$RETVAL" = 0 ] && touch $LOCK_FILE
-	echo
-}
-
-stop()
-{
-	echo -n $"Stopping $prog: "
-	killall vmware-user
-	unmount_stuff
-	killproc $GUESTD
-	RETVAL=$?
-	[ "$RETVAL" = 0 ] && rm -f $LOCK_FILE
-	[ "$RETVAL" = 0 ] && rm -f $PID_FILE
-	echo
-}
-
-case "$1" in
-	start)
-		start
-		;;
-	stop)
-		stop
-		;;
-	restart)
-		stop
-		start
-		;;
-	condrestart)
-		if [ -f "$LOCK_FILE" ]; then
-			stop
-			start
+	for DEVICE in /sys/bus/pci/devices/*
+	do
+		if grep -q 15ad ${DEVICE}/vendor && grep -q 0720 ${DEVICE}/device
+		then
+			return 0
 		fi
+
+		if [ "${HWVERSION}" -ge "4" ] && grep -q 1022 ${DEVICE}/vendor && grep -q 2000 ${DEVICE}/device
+		then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+vmxnet_found ()
+{
+	if modprobe -n -q vmxnet
+	then
+		return 0
+	fi
+
+	return 1
+}
+
+exit_if_not_in_vm () {
+	if [ ! -x /usr/bin/vmware-checkvm ] || ! /usr/bin/vmware-checkvm > /dev/null 2>&1
+	then
+		echo "Not starting as we're not running in a vm."
+		exit 0
+	fi
+}
+
+case "${1}" in
+	start)
+		# Check if we're running inside VMWare
+		exit_if_not_in_vm
+
+		log_daemon_msg "Loading open-vm-tools modules"
+		log_progress_msg "vmhgfs"; modprobe vmhgfs
+		log_progress_msg "vmmemctl"; modprobe vmmemctl
+		log_progress_msg "vmsync"; modprobe vmsync
+		log_end_msg 0
+
+		if vmxnet_found && vmxnet_needed
+		then
+			modprobe -r pcnet32
+			modprobe vmxnet
+		fi
+
+		log_daemon_msg "Starting open-vm guest daemon" "vmware-guestd"
+		vmware-guestd --background /var/run/vmware-guestd.pid
+		log_end_msg 0
 		;;
-	status)
-		status $GUESTD
-		RETVAL=$?
+
+	stop)
+		# Check if we're running inside VMWare
+		exit_if_not_in_vm
+
+		log_daemon_msg "Stopping open-vm guest daemon" "vmware-guestd"
+
+		if [ -f /var/run/vmware-guestd.pid ]
+		then
+			kill $(cat /var/run/vmware-guestd.pid)
+		fi
+
+		log_end_msg 0
+
+		if vmxnet_found && vmxnet_needed
+		then
+			modprobe -r vmxnet
+			modprobe pcnet32
+		fi
+
+		log_daemon_msg "Removing open-vm-tools modules"
+		log_progress_msg "vmhgfs"; modprobe -r vmhgfs
+		log_progress_msg "vmmemctl"; modprobe -r vmmemctl
+		log_progress_msg "vmsync"; modprobe -r vmsync
+		log_end_msg 0
 		;;
+
+	force-reload|restart)
+		${0} stop; ${0} start
+		;;
+
 	*)
-		echo $"Usage: $0 {start|stop|restart|condrestart|status}"
-		RETVAL=1
+		log_success_msg "Usage: ${0} {start|stop|restart|force-reload}"
+		exit 1
 		;;
 esac
-exit $RETVAL
