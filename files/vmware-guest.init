@@ -1,16 +1,12 @@
 #!/bin/sh
 
-### BEGIN INIT INFO
-# Provides:		open-vm-tools
-# Required-Start:	$local_fs
-# Required-Stop:	$local_fs
-# X-Start-Before:	$network
-# X-Stop-After:		$network
-# Default-Start:	S
-# Default-Stop:		0 6
-# Description:		Runs the open-vm-tools services
-# Short-Description:	Runs the open-vm-tools services
-### END INIT INFO
+# Init file for open-vm-tools vmware-guestd daemon
+#
+# chkconfig: 345 80 20
+# description: open-vm-tools guest daemon
+#
+# processname: vmware-guestd
+# pidfile: /var/run/vmware-guestd.pid
 
 . /lib/lsb/init-functions
 
@@ -45,11 +41,19 @@ vmxnet_found ()
 }
 
 exit_if_not_in_vm () {
-	if [ ! -x /usr/bin/vmware-checkvm ] || ! /usr/bin/vmware-checkvm > /dev/null 2>&1
+	if [ ! -x /usr/local/bin/vmware-checkvm ] || ! /usr/local/bin/vmware-checkvm > /dev/null 2>&1
 	then
-		echo "Not starting as we're not running in a vm."
+		log_failure_msg "Not starting open-vm-tools as we're not running in a vm."
 		exit 0
 	fi
+}
+
+load_module () {
+	modprobe $1 && log_success_msg "Loaded module $1" || log_failure_msg "Unable to load module $1"
+}
+
+unload_module () {
+	modprobe -r $1 && log_success_msg "Unloaded module $1" || log_failure_msg "Unable to unload module $1"
 }
 
 case "${1}" in
@@ -57,47 +61,48 @@ case "${1}" in
 		# Check if we're running inside VMWare
 		exit_if_not_in_vm
 
-		log_daemon_msg "Loading open-vm-tools modules"
-		log_progress_msg "vmhgfs"; modprobe vmhgfs
-		log_progress_msg "vmmemctl"; modprobe vmmemctl
-		log_progress_msg "vmsync"; modprobe vmsync
-		log_end_msg 0
+		load_module vmhgfs
+		load_module vmmemctl
+		load_module vmsync
 
 		if vmxnet_found && vmxnet_needed
 		then
-			modprobe -r pcnet32
-			modprobe vmxnet
+			unload_module pcnet32
+			load_module vmxnet
 		fi
 
-		log_daemon_msg "Starting open-vm guest daemon" "vmware-guestd"
-		vmware-guestd --background /var/run/vmware-guestd.pid
-		log_end_msg 0
+		echo -n "Starting open-vm guest daemon vmware-guestd"
+
+		if [ ! -f /var/run/vmware-guestd.pid ]
+		then
+			vmware-guestd --background /var/run/vmware-guestd.pid && log_success_msg || log_failure_msg
+		else
+			log_failure_msg " ...already running !"
+		fi
 		;;
 
 	stop)
 		# Check if we're running inside VMWare
 		exit_if_not_in_vm
 
-		log_daemon_msg "Stopping open-vm guest daemon" "vmware-guestd"
+		echo -n "Stopping open-vm guest daemon vmware-guestd"
 
 		if [ -f /var/run/vmware-guestd.pid ]
 		then
-			kill $(cat /var/run/vmware-guestd.pid)
+			kill $(cat /var/run/vmware-guestd.pid) && log_success_msg || log_failure_msg
+		else
+			log_failure_msg " ...no pidfile !"
 		fi
-
-		log_end_msg 0
 
 		if vmxnet_found && vmxnet_needed
 		then
-			modprobe -r vmxnet
-			modprobe pcnet32
+			unload_module vmxnet
+			load_module pcnet32
 		fi
 
-		log_daemon_msg "Removing open-vm-tools modules"
-		log_progress_msg "vmhgfs"; modprobe -r vmhgfs
-		log_progress_msg "vmmemctl"; modprobe -r vmmemctl
-		log_progress_msg "vmsync"; modprobe -r vmsync
-		log_end_msg 0
+		unload_module vmhgfs
+		unload_module vmmemctl
+		unload_module vmsync
 		;;
 
 	force-reload|restart)
@@ -105,7 +110,7 @@ case "${1}" in
 		;;
 
 	*)
-		log_success_msg "Usage: ${0} {start|stop|restart|force-reload}"
+		echo "Usage: ${0} {start|stop|restart|force-reload}"
 		exit 1
 		;;
 esac
