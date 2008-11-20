@@ -73,12 +73,16 @@ class openvmtools::base {
 
       service { "open-vm-tools":
         require => [File["/etc/init.d/open-vm-tools"], Exec["install open-vm-tools"]],
+        ensure => running,
+        enable => true,
+        hasstatus => true,
       }
 
       exec { "install open-vm-tools":
         command => "/usr/local/sbin/install-open-vm-tools.sh $ovt_version",
-        unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmmemctl.ko && lsmod | grep -q vmmemctl && ! grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
+        unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmmemctl.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
         require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Package["gcc"], Package["gcc-c++"], Package["libicu-devel"], Package["kernel-devel-${kernelrelease}"], Package["procps"], Package["libdnet"], Package["libdnet-devel"]],
+        notify => Service["open-vm-tools"],
       }
 
     }

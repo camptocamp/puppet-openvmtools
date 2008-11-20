@@ -8,6 +8,8 @@
 # processname: vmware-guestd
 # pidfile: /var/run/vmware-guestd.pid
 
+PATH="$PATH:/usr/local/sbin:/usr/local/bin"
+
 . /lib/lsb/init-functions
 
 vmxnet_needed ()
@@ -105,12 +107,22 @@ case "${1}" in
 		unload_module vmsync
 		;;
 
+	status)
+		if test -f /var/run/vmware-guestd.pid && pidof vmware-guestd > /dev/null; then
+			echo vmware-guestd running
+			exit 0
+		else
+			echo vmware-guestd is not running
+			exit 1
+		fi
+		;;
+
 	force-reload|restart)
 		${0} stop; ${0} start
 		;;
 
 	*)
-		echo "Usage: ${0} {start|stop|restart|force-reload}"
+		echo "Usage: ${0} {start|stop|status|restart|force-reload}"
 		exit 1
 		;;
 esac
