@@ -1,4 +1,4 @@
-class openvmtools::base {
+class openvmtools {
 
 ####
 # open-vm-tools est la version GPL des infâmes vmware-tools. Ce projet est
