@@ -52,6 +52,16 @@ class openvmtools {
         ensure => present,
       }
 
+      # curiously open-vm-tools build system links to a non-existing file...
+      file { "libdnet.1":
+        target => "libdnet.so",
+        path => $architecture ? {
+          x86_64 => "/usr/lib64/libdnet.1",
+          default => "/usr/lib/libdnet.1",
+        },
+        require => Package["libdnet"],
+      }
+
       file { "/etc/init.d/open-vm-tools":
         mode => 0755,
         owner => root,
