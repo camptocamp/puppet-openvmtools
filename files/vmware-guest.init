@@ -1,4 +1,5 @@
 #!/bin/sh
+# file managed by puppet
 
 # Init file for open-vm-tools vmware-guestd daemon
 #

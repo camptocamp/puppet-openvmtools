@@ -1,4 +1,5 @@
 #!/bin/bash
+# file managed by puppet
 
 #####
 # This script grabs, builds and installs a definied version of open-vm-tools
