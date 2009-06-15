@@ -82,10 +82,15 @@ class openvmtools {
       }
 
       service { "open-vm-tools":
-        require => [File["/etc/init.d/open-vm-tools"], Exec["install open-vm-tools"]],
+        require => [File["/etc/init.d/open-vm-tools"], Exec["install open-vm-tools"], Service["vmware-tools"]],
         ensure => running,
         enable => true,
         hasstatus => true,
+      }
+
+      service { "vmware-tools":
+        ensure => stopped,
+        enable => false,
       }
 
       exec { "install open-vm-tools":
