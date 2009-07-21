@@ -48,7 +48,7 @@ class openvmtools {
 
       $ovt_version = "2008.11.18-130226"
 
-      package { ["gcc", "gcc-c++", "libicu-devel", "kernel-devel-${kernelrelease}", "procps", "libdnet", "libdnet-devel"]:
+      package { ["libicu-devel", "procps", "libdnet", "libdnet-devel"]:
         ensure => present,
       }
 
@@ -96,13 +96,13 @@ class openvmtools {
       exec { "install open-vm-tools":
         command => "/usr/local/sbin/install-open-vm-tools.sh $ovt_version",
         unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmmemctl.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
-        require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Package["gcc"], Package["gcc-c++"], Package["libicu-devel"], Package["kernel-devel-${kernelrelease}"], Package["procps"], Package["libdnet"], Package["libdnet-devel"]],
+        require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Class["buildenv::kernel"], Package["libicu-devel"], Package["procps"], Package["libdnet"], Package["libdnet-devel"]],
         notify => Service["open-vm-tools"],
       }
 
     }
 
-    Debian: { #BUG: pas testé !!!
+    Debian: {
 
       package { ["open-vm-source", "open-vm-tools"]:
         ensure => installed
@@ -114,13 +114,14 @@ class openvmtools {
       }
 
       exec { "install open-vm-modules":
-        command => "/usr/bin/module-assistant auto-install open-vm-source",
-        require => Package["open-vm-source"],
+        command => "/usr/bin/module-assistant --text-mode auto-install open-vm-source",
+        require => [Package["open-vm-source"], Class["buildenv::kernel"]],
       }
 
       service { "open-vm-tools":
         ensure => running,
-        require => Package["open-vm-tools"],
+        enable => true,
+        require => [Package["open-vm-tools"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"]],
       }
     }
 
