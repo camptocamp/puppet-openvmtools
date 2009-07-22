@@ -88,11 +88,6 @@ class openvmtools {
         hasstatus => true,
       }
 
-      service { "vmware-tools":
-        ensure => stopped,
-        enable => false,
-      }
-
       exec { "install open-vm-tools":
         command => "/usr/local/sbin/install-open-vm-tools.sh $ovt_version",
         unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmmemctl.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
@@ -114,18 +109,27 @@ class openvmtools {
       }
 
       exec { "install open-vm-modules":
-        command => "/usr/bin/module-assistant --text-mode auto-install open-vm-source",
+        command => "module-assistant --text-mode auto-install open-vm-source",
         require => [Package["open-vm-source"], Class["buildenv::kernel"]],
+        unless  => "dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
       }
 
       service { "open-vm-tools":
         ensure => running,
         enable => true,
-        require => [Package["open-vm-tools"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"]],
+        hasstatus => false,
+        pattern => "vmware-guestd --background",
+        require => [Package["open-vm-tools"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"], Service["vmware-tools"]],
       }
     }
 
-
   } # end case $operatingsystem
+
+  # ensure vmware-tools is not running, if it happened to be installed.
+  service { "vmware-tools":
+    ensure => stopped,
+    enable => false,
+  }
+
 
 }
