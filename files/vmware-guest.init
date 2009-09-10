@@ -12,6 +12,7 @@
 PATH="$PATH:/usr/local/sbin:/usr/local/bin"
 
 . /lib/lsb/init-functions
+PID="/var/run/vmtoolsd.pid"
 
 vmxnet_needed ()
 {
@@ -78,7 +79,7 @@ case "${1}" in
 
 		if [ ! -f /var/run/vmtoolsd.pid ]
 		then
-			vmtoolsd --background /var/run/vmtoolsd.pid && log_success_msg || log_failure_msg
+			vmtoolsd --background $PID && log_success_msg || log_failure_msg
 		else
 			log_failure_msg " ...already running !"
 		fi
@@ -90,9 +91,9 @@ case "${1}" in
 
 		echo -n "Stopping open-vm guest daemon vmtoolsd"
 
-		if [ -f /var/run/vmtoolsd.pid ]
+		if [ -f $PID ]
 		then
-			kill $(cat /var/run/vmtoolsd.pid) && log_success_msg || log_failure_msg
+			kill $(cat $PID) && rm -f $PID && log_success_msg || log_failure_msg
 		else
 			log_failure_msg " ...no pidfile !"
 		fi
@@ -109,7 +110,7 @@ case "${1}" in
 		;;
 
 	status)
-		if test -f /var/run/vmtoolsd.pid && pidof vmtoolsd > /dev/null; then
+		if test -f $PID && pidof vmtoolsd > /dev/null; then
 			echo vmtoolsd running
 			exit 0
 		else
