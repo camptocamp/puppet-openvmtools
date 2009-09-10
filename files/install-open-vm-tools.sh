@@ -19,7 +19,7 @@ if $(lsb_release -c | grep -q Nahant); then
 fi
 
 # check if process is running, stop it if so
-if (/etc/init.d/open-vm-tools); then
+if [ -f /etc/init.d/open-vm-tools ]; then
   /etc/init.d/open-vm-tools stop
 fi
 
