@@ -1,13 +1,13 @@
 #!/bin/sh
 # file managed by puppet
 
-# Init file for open-vm-tools vmware-guestd daemon
+# Init file for open-vm-tools vmtoolsd daemon
 #
 # chkconfig: 345 80 20
 # description: open-vm-tools guest daemon
 #
-# processname: vmware-guestd
-# pidfile: /var/run/vmware-guestd.pid
+# processname: vmtoolsd
+# pidfile: /var/run/vmtoolsd.pid
 
 PATH="$PATH:/usr/local/sbin:/usr/local/bin"
 
@@ -74,11 +74,11 @@ case "${1}" in
 			load_module vmxnet
 		fi
 
-		echo -n "Starting open-vm guest daemon vmware-guestd"
+		echo -n "Starting open-vm guest daemon vmtoolsd"
 
-		if [ ! -f /var/run/vmware-guestd.pid ]
+		if [ ! -f /var/run/vmtoolsd.pid ]
 		then
-			vmware-guestd --background /var/run/vmware-guestd.pid && log_success_msg || log_failure_msg
+			vmtoolsd --background /var/run/vmtoolsd.pid && log_success_msg || log_failure_msg
 		else
 			log_failure_msg " ...already running !"
 		fi
@@ -88,11 +88,11 @@ case "${1}" in
 		# Check if we're running inside VMWare
 		exit_if_not_in_vm
 
-		echo -n "Stopping open-vm guest daemon vmware-guestd"
+		echo -n "Stopping open-vm guest daemon vmtoolsd"
 
-		if [ -f /var/run/vmware-guestd.pid ]
+		if [ -f /var/run/vmtoolsd.pid ]
 		then
-			kill $(cat /var/run/vmware-guestd.pid) && log_success_msg || log_failure_msg
+			kill $(cat /var/run/vmtoolsd.pid) && log_success_msg || log_failure_msg
 		else
 			log_failure_msg " ...no pidfile !"
 		fi
@@ -109,11 +109,11 @@ case "${1}" in
 		;;
 
 	status)
-		if test -f /var/run/vmware-guestd.pid && pidof vmware-guestd > /dev/null; then
-			echo vmware-guestd running
+		if test -f /var/run/vmtoolsd.pid && pidof vmtoolsd > /dev/null; then
+			echo vmtoolsd running
 			exit 0
 		else
-			echo vmware-guestd is not running
+			echo vmtoolsd is not running
 			exit 1
 		fi
 		;;
