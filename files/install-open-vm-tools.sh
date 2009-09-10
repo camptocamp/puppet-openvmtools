@@ -18,6 +18,11 @@ if $(lsb_release -c | grep -q Nahant); then
   add_confopts=" --without-procps "
 fi
 
+# check if process is running, stop it if so
+if (/etc/init.d/open-vm-tools); then
+  /etc/init.d/open-vm-tools stop
+fi
+
 MIRROR="switch.dl.sourceforge.net"
 #VER="2008.11.18-130226"
 VER=$1
@@ -26,7 +31,13 @@ BUILDLOG=/tmp/open-vm-tools-${VER}-build.log
 
 wget -qP $WORKDIR http://${MIRROR}/sourceforge/open-vm-tools/open-vm-tools-${VER}.tar.gz > /dev/null
 tar -C $WORKDIR -xzf $WORKDIR/open-vm-tools-${VER}.tar.gz || exit 1
-(cd $WORKDIR/open-vm-tools-${VER}/ && ./configure --without-x $add_confopts > $BUILDLOG 2>&1) || exit 1
+
+# bugfix for latest version. See
+# https://sourceforge.net/tracker/index.php?func=detail&aid=2854490&group_id=204462&atid=989708
+wget -qO $WORKDIR/open-vm-tools-${VER}/patch-989708.patch "https://sourceforge.net/tracker/download.php?group_id=204462&atid=989708&file_id=342259&aid=2854490" >/dev/null
+(cd $WORKDIR/open-vm-tools-${VER}/ && patch -p1 < $WORKDIR/open-vm-tools-${VER}/patch-989708.patch > $BUILDLOG 2>&1) || exit 1
+
+(cd $WORKDIR/open-vm-tools-${VER}/ && ./configure --without-gtk2 --without-x --without-gtkmm --without-pam $add_confopts >> $BUILDLOG 2>&1) || exit 1
 make -C $WORKDIR/open-vm-tools-${VER}/ >> $BUILDLOG 2>&1 || exit 1
 make -C $WORKDIR/open-vm-tools-${VER}/ install >> $BUILDLOG 2>&1 || exit 1
 
