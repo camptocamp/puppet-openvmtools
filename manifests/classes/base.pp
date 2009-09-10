@@ -31,16 +31,13 @@
 #  http://packages.debian.org/lenny/open-vm-tools
 #
 class openvmtools {
+  include openvmtools::packages
 
   case $operatingsystem {
 
     RedHat: {
 
-      $ovt_version = "2008.11.18-130226"
-
-      package { ["libicu-devel", "procps", "libdnet", "libdnet-devel"]:
-        ensure => present,
-      }
+      $ovt_version = "2009.07.22-179896"
 
       # curiously open-vm-tools build system links to a non-existing file...
       file { "libdnet.1":
@@ -57,6 +54,7 @@ class openvmtools {
         owner => root,
         group => root,
         source => "puppet:///openvmtools/vmware-guest.init",
+        require => Exec["install open-vm-tools"],
       }
 
       file { "/usr/local/sbin/install-open-vm-tools.sh":
@@ -81,17 +79,14 @@ class openvmtools {
       exec { "install open-vm-tools":
         command => "/usr/local/sbin/install-open-vm-tools.sh $ovt_version",
         unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmmemctl.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
-        require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Class["buildenv::kernel"], Package["libicu-devel"], Package["procps"], Package["libdnet"], Package["libdnet-devel"]],
+        require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Class["buildenv::kernel"], Class["openvmtools::packages"], Class["buildenv::c"]],
         notify => Service["open-vm-tools"],
+        timeout => 300,
       }
 
     }
 
     Debian: {
-
-      package { ["open-vm-source", "open-vm-tools"]:
-        ensure => installed
-      }
 
       package { ["open-vm-modules-$kernelrelease"]:
         ensure => installed,
@@ -100,7 +95,7 @@ class openvmtools {
 
       exec { "install open-vm-modules":
         command => "module-assistant --text-mode auto-install open-vm-source",
-        require => [Package["open-vm-source"], Class["buildenv::kernel"]],
+        require => [Class["openvmtools::packages"], Class["buildenv::kernel"]],
         unless  => "dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
       }
 
@@ -109,7 +104,7 @@ class openvmtools {
         enable => true,
         hasstatus => false,
         pattern => "vmware-guestd --background",
-        require => [Package["open-vm-tools"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"], Service["vmware-tools"]],
+        require => [Class["openvmtools::packages"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"], Service["vmware-tools"]],
       }
     }
 
