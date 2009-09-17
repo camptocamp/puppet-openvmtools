@@ -1,0 +1,129 @@
+#!/bin/sh
+# file managed by puppet
+
+# Init file for open-vm-tools vmware-guestd daemon
+#
+# chkconfig: 345 80 20
+# description: open-vm-tools guest daemon
+#
+# processname: vmware-guestd
+# pidfile: /var/run/vmware-guestd.pid
+
+PATH="$PATH:/usr/local/sbin:/usr/local/bin"
+
+. /lib/lsb/init-functions
+
+vmxnet_needed ()
+{
+	HWVERSION="$(vmware-checkvm -h | head -1 | cut -f5 -d\ )"
+
+	for DEVICE in /sys/bus/pci/devices/*
+	do
+		if grep -q 15ad ${DEVICE}/vendor && grep -q 0720 ${DEVICE}/device
+		then
+			return 0
+		fi
+
+		if [ "${HWVERSION}" -ge "4" ] && grep -q 1022 ${DEVICE}/vendor && grep -q 2000 ${DEVICE}/device
+		then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+vmxnet_found ()
+{
+	if modprobe -n -q vmxnet
+	then
+		return 0
+	fi
+
+	return 1
+}
+
+exit_if_not_in_vm () {
+	if [ ! -x /usr/local/bin/vmware-checkvm ] || ! /usr/local/bin/vmware-checkvm > /dev/null 2>&1
+	then
+		log_failure_msg "Not starting open-vm-tools as we're not running in a vm."
+		exit 0
+	fi
+}
+
+load_module () {
+	modprobe $1 && log_success_msg "Loaded module $1" || log_failure_msg "Unable to load module $1"
+}
+
+unload_module () {
+	modprobe -r $1 && log_success_msg "Unloaded module $1" || log_failure_msg "Unable to unload module $1"
+}
+
+case "${1}" in
+	start)
+		# Check if we're running inside VMWare
+		exit_if_not_in_vm
+
+		load_module vmhgfs
+		load_module vmmemctl
+		load_module vmsync
+
+		if vmxnet_found && vmxnet_needed
+		then
+			unload_module pcnet32
+			load_module vmxnet
+		fi
+
+		echo -n "Starting open-vm guest daemon vmware-guestd"
+
+		if [ ! -f /var/run/vmware-guestd.pid ]
+		then
+			vmware-guestd --background /var/run/vmware-guestd.pid && log_success_msg || log_failure_msg
+		else
+			log_failure_msg " ...already running !"
+		fi
+		;;
+
+	stop)
+		# Check if we're running inside VMWare
+		exit_if_not_in_vm
+
+		echo -n "Stopping open-vm guest daemon vmware-guestd"
+
+		if [ -f /var/run/vmware-guestd.pid ]
+		then
+			kill $(cat /var/run/vmware-guestd.pid) && log_success_msg || log_failure_msg
+		else
+			log_failure_msg " ...no pidfile !"
+		fi
+
+		if vmxnet_found && vmxnet_needed
+		then
+			unload_module vmxnet
+			load_module pcnet32
+		fi
+
+		unload_module vmhgfs
+		unload_module vmmemctl
+		unload_module vmsync
+		;;
+
+	status)
+		if test -f /var/run/vmware-guestd.pid && pidof vmware-guestd > /dev/null; then
+			echo vmware-guestd running
+			exit 0
+		else
+			echo vmware-guestd is not running
+			exit 1
+		fi
+		;;
+
+	force-reload|restart)
+		${0} stop; ${0} start
+		;;
+
+	*)
+		echo "Usage: ${0} {start|stop|status|restart|force-reload}"
+		exit 1
+		;;
+esac

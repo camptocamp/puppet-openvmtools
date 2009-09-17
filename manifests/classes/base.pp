@@ -37,7 +37,12 @@ class openvmtools {
 
     RedHat: {
 
-      $ovt_version = "2009.07.22-179896"
+      # RHEL4 only has an glib2-2.4 version. We must stay with the latest
+      # version which doesn't require glib2-2.6.
+      $ovt_version = $lsbmajdistrelease ? {
+        "4"     => "2009.01.21-142982",
+        default => "2009.07.22-179896",
+      }
 
       # curiously open-vm-tools build system links to a non-existing file...
       file { "libdnet.1":
@@ -53,7 +58,10 @@ class openvmtools {
         mode => 0755,
         owner => root,
         group => root,
-        source => "puppet:///openvmtools/vmware-guest.init",
+        source => $lsbmajdistrelease ? {
+          "4"     => "puppet:///openvmtools/vmware-guest.init.guestd",
+          default => "puppet:///openvmtools/vmware-guest.init.vmtoolsd",
+        },
         require => Exec["install open-vm-tools"],
       }
 
