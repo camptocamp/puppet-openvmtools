@@ -87,7 +87,7 @@ class openvmtools {
 
       exec { "install open-vm-tools":
         command => "/usr/local/sbin/install-open-vm-tools.sh $ovt_version",
-        unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmmemctl.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
+        unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmsync.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
         require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Class["buildenv::kernel"], Class["openvmtools::packages"], Class["buildenv::c"]],
         notify => Service["open-vm-tools"],
         timeout => 300,
