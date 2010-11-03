@@ -34,9 +34,9 @@ vmxnet_needed ()
 	return 1
 }
 
-vmxnet_found ()
+kmod_found()
 {
-	if modprobe -n -q vmxnet
+	if modprobe -n -q $1
 	then
 		return 0
 	fi
@@ -66,10 +66,14 @@ case "${1}" in
 		exit_if_not_in_vm
 
 		load_module vmhgfs
-		load_module vmmemctl
 		load_module vmsync
+		
+		if kmod_found vmmemctl
+		then
+			load_module vmmemctl
+		fi
 
-		if vmxnet_found && vmxnet_needed
+		if kmod_found vmxnet && vmxnet_needed
 		then
 			unload_module pcnet32
 			load_module vmxnet
@@ -98,14 +102,18 @@ case "${1}" in
 			log_failure_msg " ...no pidfile !"
 		fi
 
-		if vmxnet_found && vmxnet_needed
+		if kmod_found vmmemctl
+		then
+		unload_module vmmemctl
+		fi
+
+		if kmod_found vmxnet && vmxnet_needed
 		then
 			unload_module vmxnet
 			load_module pcnet32
 		fi
 
 		unload_module vmhgfs
-		unload_module vmmemctl
 		unload_module vmsync
 		;;
 
