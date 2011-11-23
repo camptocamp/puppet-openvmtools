@@ -63,8 +63,8 @@ class openvmtools {
         owner => root,
         group => root,
         source => $lsbmajdistrelease ? {
-          "4"     => "puppet:///openvmtools/vmware-guest.init.guestd",
-          default => "puppet:///openvmtools/vmware-guest.init.vmtoolsd",
+          "4"     => "puppet:///modules/openvmtools/vmware-guest.init.guestd",
+          default => "puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd",
         },
         require => Exec["install open-vm-tools"],
       }
@@ -73,7 +73,7 @@ class openvmtools {
         mode => 0755,
         owner => root,
         group => root,
-        source => "puppet:///openvmtools/install-open-vm-tools.sh",
+        source => "puppet:///modules/openvmtools/install-open-vm-tools.sh",
       }
 
       file { "/etc/vmware-tools/open-vm-tools.version":
