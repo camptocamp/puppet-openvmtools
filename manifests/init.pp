@@ -126,6 +126,7 @@ class openvmtools {
   service { "vmware-tools":
     ensure => stopped,
     enable => false,
+    hasstatus => false,
   }
 
 
