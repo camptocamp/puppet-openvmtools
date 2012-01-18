@@ -115,7 +115,10 @@ class openvmtools {
         ensure => running,
         enable => true,
         hasstatus => false,
-        pattern => "vmware-guestd --background",
+        pattern => $lsbdistcodename ? {
+                    'lenny' => "vmware-guestd --background",
+                    'squeeze' => 'vmtoolsd',
+                   },
         require => [Class["openvmtools::packages"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"], Service["vmware-tools"]],
       }
     }
