@@ -34,8 +34,8 @@ tar -C $WORKDIR -xzf $WORKDIR/open-vm-tools-${VER}.tar.gz || exit 1
 # bugfix for version 2009.07.22-179896. See
 # https://sourceforge.net/tracker/index.php?func=detail&aid=2854490&group_id=204462&atid=989708
 if [ "$VER" == "2009.07.22-179896" ]; then
-  wget -qO $WORKDIR/open-vm-tools-${VER}/patch-989708.patch "https://sourceforge.net/tracker/download.php?group_id=204462&atid=989708&file_id=342259&aid=2854490" >/dev/null
-  (cd $WORKDIR/open-vm-tools-${VER}/ && patch -p1 < $WORKDIR/open-vm-tools-${VER}/patch-989708.patch > $BUILDLOG 2>&1) || exit 1
+  wget -nv -O $WORKDIR/open-vm-tools-${VER}/patch-989708.patch "https://sourceforge.net/tracker/download.php?group_id=204462&atid=989708&file_id=342259&aid=2854490" >$BUILDLOG 2>&1
+  (cd $WORKDIR/open-vm-tools-${VER}/ && patch -p1 < $WORKDIR/open-vm-tools-${VER}/patch-989708.patch >> $BUILDLOG 2>&1) || exit 1
 fi
 
 (cd $WORKDIR/open-vm-tools-${VER}/ && ./configure --without-gtk2 --without-x --without-gtkmm --without-pam $add_confopts >> $BUILDLOG 2>&1) || exit 1
