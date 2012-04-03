@@ -108,7 +108,7 @@ class openvmtools {
       exec { "install open-vm-modules":
         command => "module-assistant --text-mode auto-install open-vm-source",
         require => [Class["openvmtools::packages"], Class["buildenv::kernel"]],
-        unless  => "dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
+        unless  => "/usr/bin/dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
       }
 
       service { "open-vm-tools":
