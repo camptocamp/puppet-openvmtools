@@ -16,12 +16,25 @@ class openvmtools::packages {
     }
 
     Debian: {
-      package { [
-        "open-vm-source",
-        "open-vm-tools",
-        ]:
-        ensure => installed
+      case $lsbdistcodename {
+        squeeze: {
+          package { [
+            "open-vm-source",
+            "open-vm-tools",
+            ]:
+            ensure => installed
+          }
+        }
+        wheezy: {
+          package { [
+            'open-vm-dkms',
+            'open-vm-tools',
+            ]:
+            ensure => installed
+          }
+        }
       }
     }
+
   }
 }
