@@ -100,15 +100,29 @@ class openvmtools {
 
     Debian: {
 
-      package { ["open-vm-modules-$kernelrelease"]:
-        ensure => installed,
-        require => Exec["install open-vm-modules"],
-      }
+      case $lsbdistcodename {
+        squeeze: {
+          package { ["open-vm-modules-$kernelrelease"]:
+            ensure => installed,
+            require => Exec["install open-vm-modules"],
+          }
 
-      exec { "install open-vm-modules":
-        command => "module-assistant --text-mode auto-install open-vm-source",
-        require => [Class["openvmtools::packages"], Class["buildenv::kernel"]],
-        unless  => "dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
+          exec { "install open-vm-modules":
+            command => "module-assistant --text-mode auto-install open-vm-source",
+            require => [Class["openvmtools::packages"], Class["buildenv::kernel"]],
+            unless  => "dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
+          }
+        } # squeeze
+
+        wheezy: {
+
+          exec { 'install open-vm-modules':
+            command => 'module-assistant --text-mode auto-install open-vm-dkms',
+            require => [Class['openvmtools::packages'], Class['buildenv::kernel']],
+            unless  => "dpkg -s open-vm-dkms | grep '^Status: install ok installed'",
+          }
+        } # wheezy
+
       }
 
       service { "open-vm-tools":
@@ -118,8 +132,9 @@ class openvmtools {
         pattern => $lsbdistcodename ? {
                     'lenny' => "vmware-guestd --background",
                     'squeeze' => 'vmtoolsd',
+                    'wheezy'  => 'vmtoolsd',
                    },
-        require => [Class["openvmtools::packages"], Package["open-vm-modules-$kernelrelease"], Exec["install open-vm-modules"], Service["vmware-tools"]],
+        require => [Class["openvmtools::packages"], Exec["install open-vm-modules"], Service["vmware-tools"]],
       }
     }
 
