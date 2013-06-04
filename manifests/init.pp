@@ -101,7 +101,7 @@ class openvmtools {
     Debian: {
 
       case $lsbdistcodename {
-        squeeze: {
+        squeeze,lenny: {
           package { ["open-vm-modules-$kernelrelease"]:
             ensure => installed,
             require => Exec["install open-vm-modules"],
