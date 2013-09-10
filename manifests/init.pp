@@ -30,69 +30,65 @@
 #- On the other hand, debian has a convenient package available in "contrib".
 #  http://packages.debian.org/lenny/open-vm-tools
 #
-class openvmtools {
-  include openvmtools::packages
+class openvmtools (
+  $ovt_version = $openvmtools::params::ovt_version,
+) inherits ::openvmtools::params {
 
-  case $operatingsystem {
+  include ::openvmtools::packages
+
+  case $::osfamily {
 
     RedHat: {
 
-      # RHEL4 only has an glib2-2.4 version. We must stay with the latest
-      # version which doesn't require glib2-2.6.
-      $ovt_version = $openvmtools_version ? { 
-	      "" => $lsbmajdistrelease ? {
-          "4"     => "2009.01.21-142982",
-          "6"     => "2010.10.18-313025",
-          default => "2009.07.22-179896",
-        },
-        default => $openvmtools_version,
-      }
-
       # curiously open-vm-tools build system links to a non-existing file...
-      file { "libdnet.1":
-        ensure => "libdnet.so",
-        path => $architecture ? {
-          x86_64 => "/usr/lib64/libdnet.1",
-          default => "/usr/lib/libdnet.1",
+      file { 'libdnet.1':
+        ensure  => 'libdnet.so',
+        path    => $::architecture ? {
+          x86_64  => '/usr/lib64/libdnet.1',
+          default => '/usr/lib/libdnet.1',
         },
-        require => Package["libdnet"],
+        require => Package['libdnet'],
       }
 
-      file { "/etc/init.d/open-vm-tools":
-        mode => 0755,
-        owner => root,
-        group => root,
-        source => $lsbmajdistrelease ? {
-          "4"     => "puppet:///modules/openvmtools/vmware-guest.init.guestd",
-          default => "puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd",
+      file { '/etc/init.d/open-vm-tools':
+        mode    => '0755',
+        owner   => root,
+        group   => root,
+        source  => $::lsbmajdistrelease ? {
+          '4'     => 'puppet:///modules/openvmtools/vmware-guest.init.guestd',
+          default => 'puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd',
         },
-        require => Exec["install open-vm-tools"],
+        require => Exec['install open-vm-tools'],
       }
 
-      file { "/usr/local/sbin/install-open-vm-tools.sh":
-        mode => 0755,
-        owner => root,
-        group => root,
-        source => "puppet:///modules/openvmtools/install-open-vm-tools.sh",
+      file { '/usr/local/sbin/install-open-vm-tools.sh':
+        mode   => '0755',
+        owner  => root,
+        group  => root,
+        source => 'puppet:///modules/openvmtools/install-open-vm-tools.sh',
       }
 
-      file { "/etc/vmware-tools/open-vm-tools.version":
-        content => "# This file is managed by puppet. DO NOT EDIT !\n$ovt_version\n",
-        require => Exec["install open-vm-tools"],
+      file { '/etc/vmware-tools/open-vm-tools.version':
+        content => "# This file is managed by puppet. DO NOT EDIT !\n${ovt_version}\n",
+        require => Exec['install open-vm-tools'],
       }
 
-      service { "open-vm-tools":
-        require => [File["/etc/init.d/open-vm-tools"], Exec["install open-vm-tools"], Service["vmware-tools"]],
-        ensure => running,
-        enable => true,
+      service { 'open-vm-tools':
+        ensure    => running,
+        require   => [
+          File['/etc/init.d/open-vm-tools'],
+          Exec['install open-vm-tools'],
+          Service['vmware-tools']
+          ],
+        enable    => true,
         hasstatus => true,
       }
 
-      exec { "install open-vm-tools":
-        command => "/usr/local/sbin/install-open-vm-tools.sh $ovt_version",
-        unless => "/usr/bin/test -f /lib/modules/$kernelrelease/kernel/drivers/misc/vmsync.ko && grep -q $ovt_version /etc/vmware-tools/open-vm-tools.version",
-        require => [File["/usr/local/sbin/install-open-vm-tools.sh"], Class["buildenv::kernel"], Class["openvmtools::packages"], Class["buildenv::c"]],
-        notify => Service["open-vm-tools"],
+      exec { 'install open-vm-tools':
+        command => "/usr/local/sbin/install-open-vm-tools.sh ${ovt_version}",
+        unless  => "/usr/bin/test -f /lib/modules/${::kernelrelease}/kernel/drivers/misc/vmsync.ko && grep -q ${ovt_version} /etc/vmware-tools/open-vm-tools.version",
+        require => [File['/usr/local/sbin/install-open-vm-tools.sh'], Class['buildenv::kernel'], Class['openvmtools::packages'], Class['buildenv::c']],
+        notify  => Service['open-vm-tools'],
         timeout => 300,
       }
 
@@ -100,17 +96,20 @@ class openvmtools {
 
     Debian: {
 
-      case $lsbdistcodename {
+      case $::lsbdistcodename {
         squeeze,lenny: {
-          package { ["open-vm-modules-$kernelrelease"]:
-            ensure => installed,
-            require => Exec["install open-vm-modules"],
+          package { ["open-vm-modules-${::kernelrelease}"]:
+            ensure  => installed,
+            require => Exec['install open-vm-modules'],
           }
 
-          exec { "install open-vm-modules":
-            command => "module-assistant --text-mode auto-install open-vm-source",
-            require => [Class["openvmtools::packages"], Class["buildenv::kernel"]],
-            unless  => "dpkg -s open-vm-modules-${kernelrelease} | grep '^Status: install ok installed'",
+          exec { 'install open-vm-modules':
+            command => 'module-assistant --text-mode auto-install open-vm-source',
+            require => [
+              Class['openvmtools::packages'],
+              Class['buildenv::kernel']
+              ],
+            unless  => "dpkg -s open-vm-modules-${::kernelrelease} | grep '^Status: install ok installed'",
           }
         } # squeeze
 
@@ -118,32 +117,39 @@ class openvmtools {
 
           exec { 'install open-vm-modules':
             command => 'module-assistant --text-mode auto-install open-vm-dkms',
-            require => [Class['openvmtools::packages'], Class['buildenv::kernel']],
+            require => [
+              Class['openvmtools::packages'],
+              Class['buildenv::kernel']
+              ],
             unless  => "dpkg -s open-vm-dkms | grep '^Status: install ok installed'",
           }
         } # wheezy
 
       }
 
-      service { "open-vm-tools":
-        ensure => running,
-        enable => true,
+      service { 'open-vm-tools':
+        ensure    => running,
+        enable    => true,
         hasstatus => false,
-        pattern => $lsbdistcodename ? {
-                    'lenny' => "vmware-guestd --background",
-                    'squeeze' => 'vmtoolsd',
-                    'wheezy'  => 'vmtoolsd',
-                   },
-        require => [Class["openvmtools::packages"], Exec["install open-vm-modules"], Service["vmware-tools"]],
+        pattern   => $::lsbdistcodename ? {
+          'lenny'   => 'vmware-guestd --background',
+          'squeeze' => 'vmtoolsd',
+          'wheezy'  => 'vmtoolsd',
+        },
+        require   => [
+          Class['openvmtools::packages'],
+          Exec['install open-vm-modules'],
+          Service['vmware-tools']
+          ],
       }
     }
 
   } # end case $operatingsystem
 
   # ensure vmware-tools is not running, if it happens to be installed.
-  service { "vmware-tools":
-    ensure => stopped,
-    enable => false,
+  service { 'vmware-tools':
+    ensure    => stopped,
+    enable    => false,
     hasstatus => false,
   }
 

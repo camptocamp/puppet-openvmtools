@@ -1,26 +1,26 @@
 class openvmtools::packages {
-  
-  case $operatingsystem {
+
+  case $::osfamily {
 
     RedHat: {
       package { [
-        "libicu-devel",
-        "procps",
-        "libdnet",
-        "libdnet-devel",
-        "glib2-devel",
-        "pam-devel",
+        'libicu-devel',
+        'procps',
+        'libdnet',
+        'libdnet-devel',
+        'glib2-devel',
+        'pam-devel',
         ]:
         ensure => present,
       }
     }
 
     Debian: {
-      case $lsbdistcodename {
+      case $::lsbdistcodename {
         squeeze: {
           package { [
-            "open-vm-source",
-            "open-vm-tools",
+            'open-vm-source',
+            'open-vm-tools',
             ]:
             ensure => installed
           }
@@ -32,6 +32,10 @@ class openvmtools::packages {
             ]:
             ensure => installed
           }
+        }
+
+        default: {
+          fail "Unknown release ${::lsbdistcodename}"
         }
       }
     }
