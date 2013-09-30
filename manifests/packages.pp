@@ -17,7 +17,7 @@ class openvmtools::packages {
 
     Debian: {
       case $::lsbdistcodename {
-        squeeze: {
+        lenny,squeeze: {
           package { [
             'open-vm-source',
             'open-vm-tools',
