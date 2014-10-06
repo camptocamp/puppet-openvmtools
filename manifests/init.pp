@@ -39,59 +39,69 @@ class openvmtools (
   case $::osfamily {
 
     RedHat: {
+      case $::lsbmajdistrelease {
+        '4','5','6': {
 
-      # curiously open-vm-tools build system links to a non-existing file...
-      file { 'libdnet.1':
-        ensure  => 'libdnet.so',
-        path    => $::architecture ? {
-          x86_64  => '/usr/lib64/libdnet.1',
-          default => '/usr/lib/libdnet.1',
-        },
-        require => Package['libdnet'],
+          # curiously open-vm-tools build system links to a non-existing file...
+          file { 'libdnet.1':
+            ensure  => 'libdnet.so',
+            path    => $::architecture ? {
+              x86_64  => '/usr/lib64/libdnet.1',
+              default => '/usr/lib/libdnet.1',
+            },
+            require => Package['libdnet'],
+          }
+
+          file { '/etc/init.d/open-vm-tools':
+            mode    => '0755',
+            owner   => root,
+            group   => root,
+            source  => $::lsbmajdistrelease ? {
+              '4'     => 'puppet:///modules/openvmtools/vmware-guest.init.guestd',
+              default => 'puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd',
+            },
+            require => Exec['install open-vm-tools'],
+          }
+
+          file { '/usr/local/sbin/install-open-vm-tools.sh':
+            mode   => '0755',
+            owner  => root,
+            group  => root,
+            source => 'puppet:///modules/openvmtools/install-open-vm-tools.sh',
+          }
+
+          file { '/etc/vmware-tools/open-vm-tools.version':
+            content => "# This file is managed by puppet. DO NOT EDIT !\n${ovt_version}\n",
+            require => Exec['install open-vm-tools'],
+          }
+
+          service { 'open-vm-tools':
+            ensure    => running,
+            require   => [
+              File['/etc/init.d/open-vm-tools'],
+              Exec['install open-vm-tools'],
+              Service['vmware-tools']
+              ],
+            enable    => true,
+            hasstatus => true,
+          }
+
+          exec { 'install open-vm-tools':
+            command => "/usr/local/sbin/install-open-vm-tools.sh ${ovt_version}",
+            unless  => "/usr/bin/test -f /lib/modules/${::kernelrelease}/kernel/drivers/misc/vmsync.ko && grep -q ${ovt_version} /etc/vmware-tools/open-vm-tools.version",
+            require => [File['/usr/local/sbin/install-open-vm-tools.sh'], Class['buildenv::kernel'], Class['openvmtools::packages'], Class['buildenv::c']],
+            notify  => Service['open-vm-tools'],
+            timeout => 300,
+          }
+        }
+
+        default: {
+          package{['open-vm-tools']:
+            ensure => present,
+          }
+        }
+
       }
-
-      file { '/etc/init.d/open-vm-tools':
-        mode    => '0755',
-        owner   => root,
-        group   => root,
-        source  => $::lsbmajdistrelease ? {
-          '4'     => 'puppet:///modules/openvmtools/vmware-guest.init.guestd',
-          default => 'puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd',
-        },
-        require => Exec['install open-vm-tools'],
-      }
-
-      file { '/usr/local/sbin/install-open-vm-tools.sh':
-        mode   => '0755',
-        owner  => root,
-        group  => root,
-        source => 'puppet:///modules/openvmtools/install-open-vm-tools.sh',
-      }
-
-      file { '/etc/vmware-tools/open-vm-tools.version':
-        content => "# This file is managed by puppet. DO NOT EDIT !\n${ovt_version}\n",
-        require => Exec['install open-vm-tools'],
-      }
-
-      service { 'open-vm-tools':
-        ensure    => running,
-        require   => [
-          File['/etc/init.d/open-vm-tools'],
-          Exec['install open-vm-tools'],
-          Service['vmware-tools']
-          ],
-        enable    => true,
-        hasstatus => true,
-      }
-
-      exec { 'install open-vm-tools':
-        command => "/usr/local/sbin/install-open-vm-tools.sh ${ovt_version}",
-        unless  => "/usr/bin/test -f /lib/modules/${::kernelrelease}/kernel/drivers/misc/vmsync.ko && grep -q ${ovt_version} /etc/vmware-tools/open-vm-tools.version",
-        require => [File['/usr/local/sbin/install-open-vm-tools.sh'], Class['buildenv::kernel'], Class['openvmtools::packages'], Class['buildenv::c']],
-        notify  => Service['open-vm-tools'],
-        timeout => 300,
-      }
-
     }
 
     Debian: {
