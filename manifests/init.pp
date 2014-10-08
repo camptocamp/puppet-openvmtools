@@ -99,6 +99,10 @@ class openvmtools (
           package{['open-vm-tools']:
             ensure => present,
           }
+          service{ 'vmtoolsd':
+            ensure => running,
+            enable => true,
+          }
         }
 
       }
