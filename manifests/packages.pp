@@ -1,17 +1,28 @@
+#
+# == Class: openvmtools::packages
+#
+# Required packages to compile openvmtools
+#
 class openvmtools::packages {
 
   case $::osfamily {
 
     RedHat: {
-      package { [
-        'libicu-devel',
-        'procps',
-        'libdnet',
-        'libdnet-devel',
-        'glib2-devel',
-        'pam-devel',
-        ]:
-        ensure => present,
+      case $::lsbmajdistrelease {
+        '4','5','6': {
+          package { [
+            'libicu-devel',
+            'procps',
+            'libdnet',
+            'libdnet-devel',
+            'glib2-devel',
+            'pam-devel',
+            ]:
+            ensure => present,
+          }
+        }
+        '7': { }
+        default: { fail( "Unsupported version of ${::operatingsystem}" ) }
       }
     }
 
