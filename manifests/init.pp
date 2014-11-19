@@ -39,7 +39,7 @@ class openvmtools (
   case $::osfamily {
 
     RedHat: {
-      case $::lsbmajdistrelease {
+      case $::operatingsystemmajrelease {
         '4','5','6': {
 
           # curiously open-vm-tools build system links to a non-existing file...
@@ -56,7 +56,7 @@ class openvmtools (
             mode    => '0755',
             owner   => root,
             group   => root,
-            source  => $::lsbmajdistrelease ? {
+            source  => $::operatingsystemmajrelease ? {
               '4'     => 'puppet:///modules/openvmtools/vmware-guest.init.guestd',
               default => 'puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd',
             },

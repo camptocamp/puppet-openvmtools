@@ -8,7 +8,7 @@ class openvmtools::packages {
   case $::osfamily {
 
     RedHat: {
-      case $::lsbmajdistrelease {
+      case $::operatingsystemmajrelease {
         '4','5','6': {
           package { [
             'libicu-devel',
