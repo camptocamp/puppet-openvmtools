@@ -1,0 +1,54 @@
+--- open-vm-tools.orig/modules/linux/vmxnet3/vmxnet3_int.h
++++ open-vm-tools/modules/linux/vmxnet3/vmxnet3_int.h
+@@ -13,7 +13,7 @@
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0) && !defined(VMXNET3_NO_NAPI)
+ #   define VMXNET3_NAPI
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24) || defined NETIF_F_GRO
+ #   define VMXNET3_NEW_NAPI
+ #endif
+ #endif
+--- open-vm-tools.orig/modules/linux/shared/compat_netdevice.h
++++ open-vm-tools/modules/linux/shared/compat_netdevice.h
+@@ -267,6 +267,7 @@ static inline int compat_unregister_netd
+ #endif
+ 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24)
++
+ #   define compat_netif_napi_add(dev, napi, poll, quota) \
+       netif_napi_add(dev, napi, poll, quota)
+ 
+@@ -281,20 +282,28 @@ static inline int compat_unregister_netd
+ 
+ #   define compat_napi_enable(dev, napi)  napi_enable(napi)
+ #   define compat_napi_disable(dev, napi) napi_disable(napi)
++
+ #else
+-struct napi_struct {
+-   int dummy;
+-};
+ 
+ #   define compat_netif_napi_add(dev, napi, pollcb, quota) \
+    do {                        \
+       (dev)->poll = (pollcb);    \
+       (dev)->weight = (quota);\
+    } while (0)
+-#   define compat_napi_complete(dev, napi) netif_rx_complete(dev)
+ #   define compat_napi_schedule(dev, napi) netif_rx_schedule(dev)
+ #   define compat_napi_enable(dev, napi)   netif_poll_enable(dev)
+ #   define compat_napi_disable(dev, napi)  netif_poll_disable(dev)
++
++/* RedHat ported GRO to 2.6.18 bringing new napi_struct with it */
++#   if defined NETIF_F_GRO
++#      define compat_napi_complete(dev, napi) napi_complete(napi)
++#   else
++#      define compat_napi_complete(dev, napi) netif_rx_complete(dev)
++       struct napi_struct {
++          int dummy;
++       };
++#   endif
++
+ #endif
+ 
+ #endif /* __COMPAT_NETDEVICE_H__ */
