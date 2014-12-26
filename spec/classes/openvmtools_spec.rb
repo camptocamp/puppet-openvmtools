@@ -1,13 +1,14 @@
 require 'spec_helper'
 
 describe 'openvmtools' do
-  let(:facts) {{
-    :lsbdistcodename   => 'wheezy',
-    :lsbmajdistrelease => '7',
-    :osfamily          => 'Debian',
-  }}
-  let :pre_condition do
-    "Exec { path => '/foo', }"
+
+  on_supported_os.each do |os, facts|
+    context "on #{os}" do
+      let(:facts) do
+        facts
+      end
+
+      it { should compile.with_all_deps }
+    end
   end
-  it { should compile.with_all_deps }
 end
