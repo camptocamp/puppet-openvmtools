@@ -43,23 +43,25 @@ class openvmtools (
         '4','5','6': {
 
           # curiously open-vm-tools build system links to a non-existing file...
+          $file_path = $::architecture ? {
+            x86_64  => '/usr/lib64/libdnet.1',
+            default => '/usr/lib/libdnet.1',
+          }
           file { 'libdnet.1':
             ensure  => 'libdnet.so',
-            path    => $::architecture ? {
-              x86_64  => '/usr/lib64/libdnet.1',
-              default => '/usr/lib/libdnet.1',
-            },
+            path    => $file_path,
             require => Package['libdnet'],
           }
 
+          $file_source = $::operatingsystemmajrelease ? {
+            '4'     => 'puppet:///modules/openvmtools/vmware-guest.init.guestd',
+            default => 'puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd',
+          }
           file { '/etc/init.d/open-vm-tools':
             mode    => '0755',
             owner   => root,
             group   => root,
-            source  => $::operatingsystemmajrelease ? {
-              '4'     => 'puppet:///modules/openvmtools/vmware-guest.init.guestd',
-              default => 'puppet:///modules/openvmtools/vmware-guest.init.vmtoolsd',
-            },
+            source  => $file_source,
             require => Exec['install open-vm-tools'],
           }
 
@@ -139,17 +141,21 @@ class openvmtools (
           }
         } # wheezy
 
+        default: {
+          fail "Unsupported release ${::lsbdistcodename}"
+        }
       }
 
+      $service_pattern = $::lsbdistcodename ? {
+        'lenny'   => 'vmware-guestd --background',
+        'squeeze' => 'vmtoolsd',
+        'wheezy'  => 'vmtoolsd',
+      }
       service { 'open-vm-tools':
         ensure    => running,
         enable    => true,
         hasstatus => false,
-        pattern   => $::lsbdistcodename ? {
-          'lenny'   => 'vmware-guestd --background',
-          'squeeze' => 'vmtoolsd',
-          'wheezy'  => 'vmtoolsd',
-        },
+        pattern   => $service_pattern,
         require   => [
           Class['openvmtools::packages'],
           Exec['install open-vm-modules'],
