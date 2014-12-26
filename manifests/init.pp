@@ -94,6 +94,7 @@ class openvmtools (
             require => [File['/usr/local/sbin/install-open-vm-tools.sh'], Class['buildenv::kernel'], Class['openvmtools::packages'], Class['buildenv::c']],
             notify  => Service['open-vm-tools'],
             timeout => 300,
+            path    => $::path,
           }
         }
 
@@ -126,6 +127,7 @@ class openvmtools (
               Class['buildenv::kernel']
               ],
             unless  => "dpkg -s open-vm-modules-${::kernelrelease} | grep '^Status: install ok installed'",
+            path    => $::path,
           }
         } # squeeze
 
@@ -138,6 +140,7 @@ class openvmtools (
               Class['buildenv::kernel']
               ],
             unless  => "dpkg -s open-vm-dkms | grep '^Status: install ok installed'",
+            path    => $::path,
           }
         } # wheezy
 
