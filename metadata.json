@@ -1,0 +1,46 @@
+{
+  "name": "camptocamp-openvmtools",
+  "version": "1.0.0",
+  "author": "Camptocamp",
+  "summary": "Puppet OpenVMTools module",
+  "license": "Apache 2.0",
+  "source": "https://github.com/camptocamp/puppet-openvmtools",
+  "project_page": "https://github.com/camptocamp/puppet-openvmtools",
+  "issues_url": "https://github.com/camptocamp/puppet-openvmtools/issues",
+  "dependencies": [
+  ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": "3.x"
+    }
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "6",
+        "7"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "10.04",
+        "12.04",
+        "14.04"
+      ]
+    },
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "5",
+        "6",
+        "7"
+      ]
+    }
+  ],
+  "puppet_version": [
+    "3.7"
+  ]
+}
