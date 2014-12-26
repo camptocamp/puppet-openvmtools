@@ -1,3 +1,5 @@
 fixtures:
+  repositories:
+    buildenv: git://github.com/camptocamp/puppet-buildenv.git
   symlinks:
     openvmtools: "#{source_dir}"
