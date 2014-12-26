@@ -7,7 +7,7 @@ class openvmtools::packages {
 
   case $::osfamily {
 
-    RedHat: {
+    'RedHat': {
       case $::operatingsystemmajrelease {
         '4','5','6': {
           package { [
@@ -26,9 +26,9 @@ class openvmtools::packages {
       }
     }
 
-    Debian: {
+    'Debian': {
       case $::lsbdistcodename {
-        lenny,squeeze: {
+        'lenny', 'squeeze': {
           package { [
             'open-vm-source',
             'open-vm-tools',
@@ -36,7 +36,7 @@ class openvmtools::packages {
             ensure => installed
           }
         }
-        wheezy: {
+        'wheezy': {
           package { [
             'open-vm-dkms',
             'open-vm-tools',
