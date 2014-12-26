@@ -38,7 +38,7 @@ class openvmtools (
 
   case $::osfamily {
 
-    RedHat: {
+    'RedHat': {
       case $::operatingsystemmajrelease {
         '4','5','6': {
 
@@ -111,10 +111,10 @@ class openvmtools (
       }
     }
 
-    Debian: {
+    'Debian': {
 
       case $::lsbdistcodename {
-        squeeze,lenny: {
+        'squeeze','lenny': {
           package { ["open-vm-modules-${::kernelrelease}"]:
             ensure  => installed,
             require => Exec['install open-vm-modules'],
@@ -131,7 +131,7 @@ class openvmtools (
           }
         } # squeeze
 
-        wheezy: {
+        'wheezy': {
 
           exec { 'install open-vm-modules':
             command => 'module-assistant --text-mode auto-install open-vm-dkms',
