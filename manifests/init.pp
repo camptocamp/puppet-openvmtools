@@ -44,7 +44,7 @@ class openvmtools (
 
           # curiously open-vm-tools build system links to a non-existing file...
           $file_path = $::architecture ? {
-            x86_64  => '/usr/lib64/libdnet.1',
+            'x86_64'  => '/usr/lib64/libdnet.1',
             default => '/usr/lib/libdnet.1',
           }
           file { 'libdnet.1':
