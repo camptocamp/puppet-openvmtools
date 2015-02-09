@@ -44,6 +44,14 @@ class openvmtools::packages {
             ensure => installed
           }
         }
+        'jessie': {
+          package { [
+            'open-vm-tools-dkms',
+            'open-vm-tools',
+            ]:
+            ensure => installed
+          }
+        }
 
         default: {
           fail "Unknown release ${::lsbdistcodename}"

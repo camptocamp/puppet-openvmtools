@@ -144,6 +144,19 @@ class openvmtools (
           }
         } # wheezy
 
+        'jessie': {
+
+          exec { 'install open-vm-modules':
+            command => 'module-assistant --text-mode auto-install open-vm-tools-dkms',
+            require => [
+              Class['openvmtools::packages'],
+              Class['buildenv::kernel']
+              ],
+            unless  => "dpkg -s open-vm-tools-dkms | grep '^Status: install ok installed'",
+            path    => $::path,
+          }
+        } # jessie
+
         default: {
           fail "Unsupported release ${::lsbdistcodename}"
         }
@@ -153,6 +166,7 @@ class openvmtools (
         'lenny'   => 'vmware-guestd --background',
         'squeeze' => 'vmtoolsd',
         'wheezy'  => 'vmtoolsd',
+        'jessie'  => 'vmtoolsd',
       }
       service { 'open-vm-tools':
         ensure    => running,
