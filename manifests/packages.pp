@@ -33,7 +33,7 @@ class openvmtools::packages {
             'open-vm-source',
             'open-vm-tools',
             ]:
-            ensure => installed
+            ensure => installed,
           }
         }
         'wheezy': {
@@ -41,7 +41,7 @@ class openvmtools::packages {
             'open-vm-dkms',
             'open-vm-tools',
             ]:
-            ensure => installed
+            ensure => installed,
           }
         }
         'jessie': {
@@ -49,7 +49,7 @@ class openvmtools::packages {
             'open-vm-tools-dkms',
             'open-vm-tools',
             ]:
-            ensure => installed
+            ensure => installed,
           }
         }
 
