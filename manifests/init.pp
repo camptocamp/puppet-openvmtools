@@ -66,10 +66,10 @@ class openvmtools (
           }
 
           file { '/usr/local/sbin/install-open-vm-tools.sh':
-            mode   => '0755',
-            owner  => root,
-            group  => root,
-            source => 'puppet:///modules/openvmtools/install-open-vm-tools.sh',
+            mode    => '0755',
+            owner   => root,
+            group   => root,
+            content => file('openvmtools/install-open-vm-tools.sh'),
           }
 
           file { '/etc/vmware-tools/open-vm-tools.version':
