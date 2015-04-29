@@ -32,6 +32,7 @@
 #
 class openvmtools (
   $ovt_version = $openvmtools::params::ovt_version,
+  $ovt_src_url = 'switch.dl.sourceforge.net/sourceforge/open-vm-tools',
 ) inherits ::openvmtools::params {
 
   include ::openvmtools::packages
@@ -69,7 +70,7 @@ class openvmtools (
             mode    => '0755',
             owner   => root,
             group   => root,
-            content => file('openvmtools/install-open-vm-tools.sh'),
+            content => template('openvmtools/install-open-vm-tools.sh.erb'),
           }
 
           file { '/etc/vmware-tools/open-vm-tools.version':
