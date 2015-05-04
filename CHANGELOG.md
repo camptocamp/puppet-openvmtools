@@ -1,3 +1,7 @@
+## 2015-05-04 - Release 1.0.2
+
+Allow to provide an URL for the tools source file, on old RHEL
+
 ## 2015-04-27 - Release 1.0.2
 
 Add nodeset ubuntu-12.04-x86_64-openstack
