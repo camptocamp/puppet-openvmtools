@@ -23,12 +23,12 @@ if [ -f /etc/init.d/open-vm-tools ]; then
   /etc/init.d/open-vm-tools stop
 fi
 
-MIRROR="switch.dl.sourceforge.net"
+MIRROR=<%= ovt_src_url %>
 VER=$1
 WORKDIR=$(mktemp -d)
 BUILDLOG=/tmp/open-vm-tools-${VER}-build.log
 
-wget -qP $WORKDIR http://${MIRROR}/sourceforge/open-vm-tools/open-vm-tools-${VER}.tar.gz > /dev/null
+wget -qP $WORKDIR http://${MIRROR}/open-vm-tools-${VER}.tar.gz > /dev/null
 tar -C $WORKDIR -xzf $WORKDIR/open-vm-tools-${VER}.tar.gz || exit 1
 
 # bugfix for version 2009.07.22-179896. See
