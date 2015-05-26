@@ -1,3 +1,7 @@
+## 2015-05-26 - Release 1.0.8
+
+add utopic & vivid nodesets
+
 ## 2015-05-26 - Release 1.0.7
 
 Fix ERB template
