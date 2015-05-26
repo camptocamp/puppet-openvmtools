@@ -23,7 +23,7 @@ if [ -f /etc/init.d/open-vm-tools ]; then
   /etc/init.d/open-vm-tools stop
 fi
 
-MIRROR=<%= ovt_src_url %>
+MIRROR=<%= @ovt_src_url %>
 VER=$1
 WORKDIR=$(mktemp -d)
 BUILDLOG=/tmp/open-vm-tools-${VER}-build.log
