@@ -1,3 +1,7 @@
+## 2016-02-24 - Release 1.0.13
+
+Remove wget ssl check on patch download
+
 ## 2015-08-21 - Release 1.0.12
 
 Use docker for acceptance tests
