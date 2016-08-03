@@ -1,3 +1,7 @@
+## 2016-08-03 - Release 1.0.14
+
+Add support for Ubuntu xenial
+
 ## 2016-02-24 - Release 1.0.13
 
 Remove wget ssl check on patch download
