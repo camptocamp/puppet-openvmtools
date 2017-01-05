@@ -183,7 +183,11 @@ class openvmtools (
       }
     }
 
-  } # end case $operatingsystem
+    default: {
+      fail "Unsupported OS family: ${::osfamily}"
+    }
+
+  } # end case $::osfamily
 
   # ensure vmware-tools is not running, if it happens to be installed.
   service { 'vmware-tools':
