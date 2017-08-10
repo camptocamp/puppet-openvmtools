@@ -1,3 +1,7 @@
+## 2017-08-10 - Release 1.0.15
+
+Add support for Ubuntu trusty
+
 ## 2016-08-03 - Release 1.0.14
 
 Add support for Ubuntu xenial
