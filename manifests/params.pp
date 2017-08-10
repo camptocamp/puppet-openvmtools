@@ -45,7 +45,7 @@ class openvmtools::params {
           $packages = [ 'open-vm-dkms', 'open-vm-tools' ]
         }
 
-        'jessie', 'xenial': {
+        'jessie', 'trusty', 'xenial': {
           $packages = [ 'open-vm-tools-dkms', 'open-vm-tools' ]
         }
 
