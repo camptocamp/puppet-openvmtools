@@ -1,3 +1,7 @@
+## 2017-08-10 - Release 1.0.16
+
+Add fix for support for Ubuntu trusty
+
 ## 2017-08-10 - Release 1.0.15
 
 Add support for Ubuntu trusty
