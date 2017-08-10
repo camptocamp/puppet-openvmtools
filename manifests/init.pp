@@ -145,7 +145,7 @@ class openvmtools (
           }
         } # wheezy
 
-        'jessie', 'xenial': {
+        'jessie', 'trusty', 'xenial': {
 
           exec { 'install open-vm-modules':
             command => 'module-assistant --text-mode auto-install open-vm-tools-dkms',
@@ -156,7 +156,7 @@ class openvmtools (
             unless  => "dpkg -s open-vm-tools-dkms | grep '^Status: install ok installed'",
             path    => $::path,
           }
-        } # jessie/xenial
+        } # jessie/trusty/xenial
 
         default: {
           fail "Unsupported release ${::lsbdistcodename}"
@@ -168,6 +168,7 @@ class openvmtools (
         'squeeze' => 'vmtoolsd',
         'wheezy'  => 'vmtoolsd',
         'jessie'  => 'vmtoolsd',
+        'trusty'  => 'vmtoolsd',
         'xenial'  => 'vmtoolsd',
       }
       service { 'open-vm-tools':
