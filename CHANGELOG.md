@@ -1,3 +1,7 @@
+## 2017-10-25 - Release 1.1.0
+
+Add support for Debian Stretch
+
 ## 2017-08-10 - Release 1.0.16
 
 Add fix for support for Ubuntu trusty
